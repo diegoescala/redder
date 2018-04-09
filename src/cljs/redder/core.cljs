@@ -32,15 +32,16 @@
 (defn choose-subreddit-panel []
   (fn []
     (let [subreddit-name (atom nil)]
-      [:div {:class "choose"}
+        [:div {:class "choose"} [:span {:class "subredditprompt"} "Choose a subreddit:" ]
         [:input {:type "text" :name "subreddit" :on-change #(reset! subreddit-name (-> % .-target .-value))}]
         [:button {:on-click #(retrieve-entries! @subreddit-name )} "Go!"]])))
         
 (defn post-entry [post]
   (fn []
-    (let [title (str (get (get post :data) :title))]
-      (let [id (str (get (get post :data) :id))]
-        [:div {:class "post" :on-click #(retrieve-comments! (:subreddit-name @app-state ) id)} title]))))
+    (let [post-data (get post :data)]
+      (let [title (get post-data :title)]
+        (let [id (get post-data :id)]
+          [:div {:class "post" :on-click #(retrieve-comments! (:subreddit-name @app-state ) id)} title])))))
   
 (defn get-posts [state]
   (if (contains? state :subreddit-data)
