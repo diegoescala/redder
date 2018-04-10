@@ -16,10 +16,10 @@
 
 (defn retrieve-entries! [subreddit]
   (go
-    (js/console.log "clicked.")
+    (js/console.log (str "Retrieving entries for " subreddit))
     (let [response (<! (http/get (str "https://www.reddit.com/r/" subreddit ".json") {:with-credentials? false}))]
       (let [response-body (get response :body)]
-        (swap! app-state assoc :subreddit-name subreddit :subreddit-data response-body)))))
+        (swap! app-state assoc :subreddit-data response-body :subreddit-name subreddit )))))
 
 (defn retrieve-comments! [subreddit post-id]
   (go
@@ -57,10 +57,9 @@
   
 (defn posts-panel []
   (fn []
-    (let [posts (get-posts @app-state )]
-      [:div {:class "posts"}
-        (for [post posts]
-         ^{key post} [post-entry post])])))
+    [:div {:class "posts"} (str "Entries in " (get @app-state :subreddit-name))
+        (for [post (get-posts @app-state )]
+         ^{key post} [post-entry post])]))
          
 (defn comment-entry [comment]
   (fn []
