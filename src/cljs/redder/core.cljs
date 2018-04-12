@@ -7,8 +7,7 @@
             [cljs.core.async :refer [<!]]
             [alandipert.storage-atom :refer [local-storage]]))
 
-(def app-state
-  (reagent/atom {}))
+(def app-state (reagent/atom {}))
 
 (defn parse-json [s]
   (let [r (transit/reader :json)]
@@ -37,11 +36,13 @@
         [:button {:on-click #(retrieve-entries! @subreddit-name )} "Go!"]])))
         
 (defn post-entry [post]
-  (fn []
+  (fn [post]
     (let [post-data (get post :data)]
       (let [title (get post-data :title)]
         (let [id (get post-data :id)]
-          [:div {:class "post" :on-click #(retrieve-comments! (:subreddit-name @app-state ) id)} title])))))
+          [:div {:class "post" 
+                 :on-click #(retrieve-comments! (:subreddit-name @app-state ) id)}
+            title ])))))
   
 (defn get-posts [state]
   (if (contains? state :subreddit-data)
@@ -62,7 +63,7 @@
          ^{key post} [post-entry post])]))
          
 (defn comment-entry [comment]
-  (fn []
+  (fn [comment]
     [:div {:class "comment"}
       (str comment)]))
          
