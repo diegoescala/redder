@@ -3,7 +3,6 @@
   "license": "Private",
   "private": true,
   "dependencies": {
-    "electron": "^1.8.4",
     "fs-extra": "0.26.5",
     "grunt-cli": "^1.2.0"
   },
