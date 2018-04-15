@@ -32,10 +32,30 @@ body {
 }
 
 .comment {
+    float: left;
+    clear: left;
+    background-color: #999;
+    margin-bottom: 5px;
+    border-radius: 8px;
+    width: 100%;
+    padding: 5px;
 }
 
 .comments {
     float:left;
     display:inline-block;
-    width:40%;
+    background-color: black;
+    width:30%;
+    margin-left: 10px;
+    padding: 10px;
+}
+
+.comment-author {
+    font-size: 10px;
+    color: white;
+}
+
+.comment-body {
+    font-size: 14px;
+    border-bottom: 2px groove gray;
 }

@@ -55,8 +55,13 @@
   
 (defn get-comments [comment-soup]
   (let [top-level-listings comment-soup]
-    (let [top-level-comments (reduce (fn [comments listings] (conj comments (get-in listings [:data :children]))) [] comment-soup)]
-    (map #(:kind (first %)) top-level-comments))))
+    (let [top-level-data 
+            (reduce 
+              (fn [comments listings] 
+                (conj comments (get-in listings [:data :children]))) [] comment-soup)]
+      (let [comment-data (filter #(= (:kind %) "t1") (apply concat top-level-data))]
+        ;(apply select-keys [:author :body] (:data comment-data))))))
+        (map #(select-keys (:data %) [:author :body]) comment-data )))))
   ;(get (get comment-soup :data) :children))
   
 (defn posts-panel []
@@ -68,7 +73,8 @@
 (defn comment-entry [comment]
   (fn [comment]
     [:div {:class "comment"}
-      (str comment)]))
+      [:div {:class "comment-author"} (get comment :author)]
+      [:div {:class "comment-body"} (get comment :body)]]))
 
 (defn test-comments []
   (let [comments {:kind "Listing" :data { :thing1 "Hi" :thing2 "Ho" :children [{:kind "t3"} {:kind "t1" :body "Comment #1"} {:kind "t1" :body "Comment #2"}]}}]
@@ -78,9 +84,8 @@
   (fn []
     [:div {:class "comments"}
       (let [comments (get-comments (get @app-state :comments))]
-        (str comments))]))
-;        (for [comment comments]
-;          ^{key comment}[comment-entry comment]))]))
+        (for [comment comments]
+          ^{key comment}[comment-entry comment]))]))
 
 (defn main-page
   []
