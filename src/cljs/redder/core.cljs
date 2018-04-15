@@ -27,6 +27,7 @@
       (let [response (<! (http/get url {:with-credentials? false}))]
         (let [response-body (get response :body)]
           (swap! app-state assoc :comments response-body))))))
+          
 
 (defn choose-subreddit-panel []
   (fn []
@@ -53,7 +54,9 @@
   []))
   
 (defn get-comments [comment-soup]
-    comment-soup)
+  (let [top-level-listings comment-soup]
+    (let [top-level-comments (reduce (fn [comments listings] (conj comments (get-in listings [:data :children]))) [] comment-soup)]
+    (map #(:kind (first %)) top-level-comments))))
   ;(get (get comment-soup :data) :children))
   
 (defn posts-panel []
@@ -66,17 +69,23 @@
   (fn [comment]
     [:div {:class "comment"}
       (str comment)]))
-         
+
+(defn test-comments []
+  (let [comments {:kind "Listing" :data { :thing1 "Hi" :thing2 "Ho" :children [{:kind "t3"} {:kind "t1" :body "Comment #1"} {:kind "t1" :body "Comment #2"}]}}]
+    (let [result (get-comments comments)]
+      result)))
 (defn comments-panel []
   (fn []
     [:div {:class "comments"}
       (let [comments (get-comments (get @app-state :comments))]
-        (for [comment comments]
-          ^{key comment}[comment-entry comment]))]))
+        (str comments))]))
+;        (for [comment comments]
+;          ^{key comment}[comment-entry comment]))]))
 
 (defn main-page
   []
   [:div 
+    (str (test-comments))
     [choose-subreddit-panel]
     [posts-panel]
     [comments-panel]])
@@ -88,3 +97,4 @@
 (defn init!
   []
   (mount-root))
+
