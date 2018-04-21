@@ -10,17 +10,13 @@
 
 (def app-state (reagent/atom {}))
 
-(rf/reg-sub :subreddit-name  (fn [db _] (get db :subreddit-name )))
-(rf/reg-sub :subreddit-posts (fn [db _] (get db :subreddit-data )))
-(rf/reg-sub :post-comments   (fn [db _] (get db :comments )))
-
-(defn open-post [{:keys [db]} [_ post-id]]
-  {:db (assoc db :view :post-detail :post-id post-id)})
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Register re-frame events
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (rf/reg-event-db 
   :init
   (fn [_ _]
-    (js/console.log "initializiaang...")
+    (js/console.log "initializing...")
     {:subreddit-name "NoSub"}))
     
 (rf/reg-event-fx
@@ -32,7 +28,37 @@
   :set-comments
   (fn [{:keys [db]} [_ details]]
     {:db (assoc db :comments details)}))
-  
+
+(rf/reg-event-db
+  :open-subreddit
+  (fn
+    [{:keys [db]} [_ subreddit-name]]
+    {:subreddit-name subreddit-name}))
+
+(rf/reg-event-fx
+  :open-post
+  (fn 
+    [{:keys [db]} [_ post-id]]
+    {:db (assoc db :view :post-detail :post-id post-id)}))
+
+(rf/reg-sub :subreddit-name  (fn [db _] (get db :subreddit-name )))
+(rf/reg-sub :subreddit-posts (fn [db _] (get db :subreddit-data )))
+(rf/reg-sub :post-comments   (fn [db _] (get db :comments )))
+
+(rf/dispatch-sync [:init])
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; End re-frame event registration
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn parse-json [s]
+  (let [r (transit/reader :json)]
+    (transit/read r s)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; AJAX
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    
+    
 (defn fetch-posts!
   [subreddit]
   (go
@@ -40,18 +66,6 @@
     (let [response (<! (http/get (str "https://www.reddit.com/r/" subreddit ".json") {:with-credentials? false}))]
       (let [response-body (get response :body)]
         (rf/dispatch [:set-post-list response-body])))))
-
-(defn open-subreddit
-  [{:keys [db]} [_ subreddit-name]]
-  {:subreddit-name subreddit-name})
-
-  (rf/reg-event-fx :open-post open-post)
-  (rf/reg-event-db :open-subreddit open-subreddit)
-  (rf/dispatch-sync [:init])
-
-(defn parse-json [s]
-  (let [r (transit/reader :json)]
-    (transit/read r s)))
 
 (defn fetch-comments! 
   [subreddit post-id]
@@ -61,6 +75,14 @@
       (let [response (<! (http/get url {:with-credentials? false}))]
         (let [response-body (get response :body)]
           (rf/dispatch [:set-comments response-body]))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; End AJAX
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+          
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; UI components
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn choose-subreddit-panel []
   (fn []
@@ -117,11 +139,10 @@
     [:div {:class "comments"}
       (for [comment (get-comments @comments)]
         ^{key comment} [comment-entry comment])]))
-                    
-(defn init-handlers[]
-)
-          
-(init-handlers)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; End UI components
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn main-page
   []
