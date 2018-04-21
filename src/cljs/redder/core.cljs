@@ -87,8 +87,8 @@
 (defn choose-subreddit-panel []
   (fn []
     (let [subreddit-name (reagent/atom "NoSub")]
-      [:div {:class "choose"} [:span {:class "subredditprompt"} "Choose a sr" ]
-        [:input {:type "text" :name "subreddit" :on-change #(reset! subreddit-name (-> % .-target .-value))}]
+      [:div {:class "choose"} [:span {:class "subredditprompt"} "Choose a subreddit" ]
+        [:input {:type "text" :on-change #(reset! subreddit-name (-> % .-target .-value))}]
         [:button {:on-click 
           #(do
             (rf/dispatch [:open-subreddit @subreddit-name])
@@ -101,7 +101,6 @@
       (let [title (get post-data :title)]
         (let [id (get post-data :id)]
           [:div {:class "post"
-                 ;:on-click #(retrieve-comments! (:subreddit-name @app-state ) id)}
                  :on-click #(fetch-comments! @(rf/subscribe [:subreddit-name]) id)}
             title ])))))
   
