@@ -6,16 +6,16 @@
 
   :source-paths ["src/cljs"]
 
-  :dependencies [[org.clojure/clojure "1.7.0"]
-                 [org.clojure/clojurescript "1.7.228"]
-                 [cljsjs/react "0.13.3-1"]
+  :dependencies [[org.clojure/clojure "1.8.0"]
+                 [org.clojure/clojurescript "1.9.908"]
                  [cljsjs/nodejs-externs "1.0.4-1"]
-                 [reagent "0.5.1"]
+                 [reagent "0.8.0-rc1"]
+                 [re-frame "0.10.5"]
                  [cljs-http "0.1.44"]
                  [com.cognitect/transit-cljs "0.8.256"]
                  [alandipert/storage-atom "2.0.1"]]
 
-  :plugins [[lein-cljsbuild "1.1.3"]]
+  :plugins [[lein-cljsbuild "1.1.7"]]
 
   :min-lein-version "2.5.3"
 
@@ -26,6 +26,8 @@
                                         :optimizations :none
                                         :pretty-print  true
                                         :cache-analysis true}}}}
+                                        
+  :jvm-opts ["--add-modules" "java.xml.bind"]
 
   :clean-targets ^{:protect false} [:target-path "out" "app/js/p"]
 
@@ -38,12 +40,12 @@
                                               :figwheel {:on-jsload "redder.core/mount-root"}}}}
                    :source-paths ["env/dev/cljs"]
 
-                   :dependencies [[figwheel-sidecar "0.5.0-6"]]
+                   :dependencies [[figwheel-sidecar "0.5.13"]]
 
                    :plugins [[lein-ancient "0.6.8"]
                              [lein-kibit "0.1.2"]
                              [lein-cljfmt "0.4.1"]
-                             [lein-figwheel "0.5.0-6"]]}
+                             [lein-figwheel "0.5.13"]]}
 
              :production {:cljsbuild {:builds {:app {:compiler {:optimizations :advanced
                                                                 :main          "redder.prod"
