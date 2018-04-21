@@ -21,20 +21,24 @@
   (fn [_ _]
     (js/console.log "initializiaang...")
     {:subreddit-name "NoSub"}))
+    
+(rf/reg-event-fx
+  :set-post-details
+  (fn [{:keys [db]} [_ details]]
+    {:db (assoc db :subreddit-data details)}))
 
-(defn fetch-posts 
-  [{:keys [db]} [_ subreddit]]
+(defn fetch-posts!
+  [subreddit]
   (go
     (js/console.log (str "Retrieving entries for " subreddit))
     (let [response (<! (http/get (str "https://www.reddit.com/r/" subreddit ".json") {:with-credentials? false}))]
       (let [response-body (get response :body)]
-        {:db (assoc db :subreddit-data response-body)}))))
+        (rf/dispatch [:set-post-details response-body])))))
 
 (defn open-subreddit
   [{:keys [db]} [_ subreddit-name]]
   {:subreddit-name subreddit-name})
 
-  (rf/reg-event-fx :fetch-posts fetch-posts)
   (rf/reg-event-fx :open-post open-post)
   (rf/reg-event-db :open-subreddit open-subreddit)
   (rf/dispatch-sync [:init])
@@ -62,7 +66,7 @@
         [:button {:on-click 
           #(do
             (rf/dispatch [:open-subreddit @subreddit-name])
-            (rf/dispatch [:fetch-posts @subreddit-name])
+            (fetch-posts! @subreddit-name)
             )} "Go!"]])))
         
 (defn post-entry [post]
@@ -94,9 +98,8 @@
     (let [sr-name (rf/subscribe [:subreddit-name])]
       (let [posts (rf/subscribe [:subreddit-posts])]
         [:div {:class "posts"} (str "Entries in " @sr-name)
-          (str posts)]))))
-          ;(for [post (get-posts posts )]
-           ; ^{key post} [post-entry post])]))))
+          (for [post (get-posts @posts )]
+            ^{key post} [post-entry post])]))))
          
 (defn comment-entry [comment]
   (fn [comment]
