@@ -12,6 +12,7 @@
 
 (rf/reg-sub :subreddit-name  (fn [db _] (get db :subreddit-name )))
 (rf/reg-sub :subreddit-posts (fn [db _] (get db :subreddit-data )))
+(rf/reg-sub :post-comments   (fn [db _] (get db :comments )))
 
 (defn open-post [{:keys [db]} [_ post-id]]
   {:db (assoc db :view :post-detail :post-id post-id)})
@@ -23,17 +24,22 @@
     {:subreddit-name "NoSub"}))
     
 (rf/reg-event-fx
-  :set-post-details
+  :set-post-list
   (fn [{:keys [db]} [_ details]]
     {:db (assoc db :subreddit-data details)}))
-
+    
+(rf/reg-event-fx
+  :set-comments
+  (fn [{:keys [db]} [_ details]]
+    {:db (assoc db :comments details)}))
+  
 (defn fetch-posts!
   [subreddit]
   (go
     (js/console.log (str "Retrieving entries for " subreddit))
     (let [response (<! (http/get (str "https://www.reddit.com/r/" subreddit ".json") {:with-credentials? false}))]
       (let [response-body (get response :body)]
-        (rf/dispatch [:set-post-details response-body])))))
+        (rf/dispatch [:set-post-list response-body])))))
 
 (defn open-subreddit
   [{:keys [db]} [_ subreddit-name]]
@@ -47,16 +53,14 @@
   (let [r (transit/reader :json)]
     (transit/read r s)))
 
-
-(defn retrieve-comments! 
+(defn fetch-comments! 
   [subreddit post-id]
   (go
     (let [url (str "https://www.reddit.com/r/" subreddit "/comments/" post-id ".json")]
       (js/console.log (str "Getting comments from " url))
       (let [response (<! (http/get url {:with-credentials? false}))]
         (let [response-body (get response :body)]
-          (swap! app-state assoc :comments response-body))))))
-          
+          (rf/dispatch [:set-comments response-body]))))))
 
 (defn choose-subreddit-panel []
   (fn []
@@ -76,7 +80,7 @@
         (let [id (get post-data :id)]
           [:div {:class "post"
                  ;:on-click #(retrieve-comments! (:subreddit-name @app-state ) id)}
-                 :on-click #(rf/dispatch [:open-post id])}
+                 :on-click #(fetch-comments! @(rf/subscribe [:subreddit-name]) id)}
             title ])))))
   
 (defn get-posts [data]
@@ -107,31 +111,13 @@
       [:div {:class "comment-author"} (get comment :author)]
       [:div {:class "comment-body"} (get comment :body)]]))
 
-(defn comments-panel []
-  (fn []
-    [:div {:class "comments"}
-      (let [comments (get-comments (get @app-state :comments))]
-        (for [comment comments]
-          ^{key comment}[comment-entry comment]))]))
-
-(defn query-comments 
-  [db v]
-  (retrieve-comments! (:subreddit db) (:post-id db)))
-  
-(defn posts-view
-  []
-  [:div 
-    (str "Hi " @(rf/subscribe [:subreddit-name]))])
-
-          
 (defn comments-view
   []
-  (let [comments @(rf/subscribe [:query-comments])]
+  (let [comments (rf/subscribe [:post-comments])]
     [:div {:class "comments"}
-      (map comment-entry @comments)]))
+      (for [comment (get-comments @comments)]
+        ^{key comment} [comment-entry comment])]))
                     
-
-  
 (defn init-handlers[]
 )
           
@@ -142,9 +128,7 @@
   [:div
     [choose-subreddit-panel]
     [posts-panel]
-    [posts-view]
-    ;[comments-view]
-    ;[comments-panel]
+    [comments-view]
     ])
 
 (defn mount-root
