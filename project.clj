@@ -1,58 +1,100 @@
-(defproject redder "0.1.0-alpha1"
-  :description "FIXME: write description"
+(defproject redder "0.1.0-SNAPSHOT"
+  :description "FIXME: write this!"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
-  :source-paths ["src/cljs"]
+  :min-lein-version "2.9.1"
 
-  :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/clojurescript "1.9.908"]
-                 [cljsjs/nodejs-externs "1.0.4-1"]
-                 [reagent "0.8.0-rc1"]
+  :dependencies [[org.clojure/clojure "1.10.0"]
+                 [org.clojure/clojurescript "1.10.773"]
+                 [org.clojure/core.async  "0.4.500"]
+                 [reagent "0.9.0"]
                  [re-frame "0.10.5"]
-                 [cljs-http "0.1.44"]
+                 [cljs-http "0.1.46"]
                  [com.cognitect/transit-cljs "0.8.256"]
                  [alandipert/storage-atom "2.0.1"]]
 
-  :plugins [[lein-cljsbuild "1.1.7"]]
+  :plugins [[lein-figwheel "0.5.20"]
+            [lein-cljsbuild "1.1.7" :exclusions [[org.clojure/clojure]]]]
 
-  :min-lein-version "2.5.3"
+  :source-paths ["src"]
 
-  :cljsbuild {:builds {:app {:source-paths ["src/cljs"]
-                             :compiler {:output-to     "app/js/p/app.js"
-                                        :output-dir    "app/js/p/out"
-                                        :asset-path    "js/p/out"
-                                        :optimizations :none
-                                        :pretty-print  true
-                                        :cache-analysis true}}}}
-                                        
-  :jvm-opts ["--add-modules" "java.xml.bind"]
+  :cljsbuild {:builds
+              [{:id "dev"
+                :source-paths ["src"]
 
-  :clean-targets ^{:protect false} [:target-path "out" "app/js/p"]
+                ;; The presence of a :figwheel configuration here
+                ;; will cause figwheel to inject the figwheel client
+                ;; into your build
+                :figwheel {:on-jsload "redder.core/on-js-reload"
+                           ;; :open-urls will pop open your application
+                           ;; in the default browser once Figwheel has
+                           ;; started and compiled your application.
+                           ;; Comment this out once it no longer serves you.
+                           :open-urls ["http://localhost:3449/index.html"]}
 
-  :figwheel {:css-dirs ["app/css"]}
+                :compiler {:main redder.core
+                           :asset-path "js/compiled/out"
+                           :output-to "resources/public/js/compiled/redder.js"
+                           :output-dir "resources/public/js/compiled/out"
+                           :source-map-timestamp true
+                           ;; To console.log CLJS data-structures make sure you enable devtools in Chrome
+                           ;; https://github.com/binaryage/cljs-devtools
+                           :preloads [devtools.preload]}}
+               ;; This next build is a compressed minified build for
+               ;; production. You can build this with:
+               ;; lein cljsbuild once min
+               {:id "min"
+                :source-paths ["src"]
+                :compiler {:output-to "resources/public/js/compiled/redder.js"
+                           :main redder.core
+                           :optimizations :advanced
+                           :pretty-print false}}]}
 
-  :profiles {:dev {:cljsbuild {:builds {:app {:source-paths ["env/dev/cljs"]
-                                              :compiler {:source-map true
-                                                         :main       "redder.dev"
-                                                         :verbose true}
-                                              :figwheel {:on-jsload "redder.core/mount-root"}}}}
-                   :source-paths ["env/dev/cljs"]
+  :figwheel {;; :http-server-root "public" ;; default and assumes "resources"
+             ;; :server-port 3449 ;; default
+             ;; :server-ip "127.0.0.1"
 
-                   :dependencies [[figwheel-sidecar "0.5.13"]]
+             :css-dirs ["resources/public/css"]} ;; watch and update CSS
 
-                   :plugins [[lein-ancient "0.6.8"]
-                             [lein-kibit "0.1.2"]
-                             [lein-cljfmt "0.4.1"]
-                             [lein-figwheel "0.5.13"]]}
+             ;; Start an nREPL server into the running figwheel process
+             ;; :nrepl-port 7888
 
-             :production {:cljsbuild {:builds {:app {:compiler {:optimizations :advanced
-                                                                :main          "redder.prod"
-                                                                :parallel-build true
-                                                                :cache-analysis false
-                                                                :closure-defines {"goog.DEBUG" false}
-                                                                :externs ["externs/misc.js"]
-                                                                :pretty-print false}
-                                                     :source-paths ["env/prod/cljs"]}}}}}
-  )
+             ;; Server Ring Handler (optional)
+             ;; if you want to embed a ring handler into the figwheel http-kit
+             ;; server, this is for simple ring servers, if this
+
+             ;; doesn't work for you just run your own server :) (see lein-ring)
+
+             ;; :ring-handler hello_world.server/handler
+
+             ;; To be able to open files in your editor from the heads up display
+             ;; you will need to put a script on your path.
+             ;; that script will have to take a file path and a line number
+             ;; ie. in  ~/bin/myfile-opener
+             ;; #! /bin/sh
+             ;; emacsclient -n +$2 $1
+             ;;
+             ;; :open-file-command "myfile-opener"
+
+             ;; if you are using emacsclient you can just use
+             ;; :open-file-command "emacsclient"
+
+             ;; if you want to disable the REPL
+             ;; :repl false
+
+             ;; to configure a different figwheel logfile path
+             ;; :server-logfile "tmp/logs/figwheel-logfile.log"
+
+             ;; to pipe all the output to the repl
+             ;; :server-logfile false
+
+
+  :profiles {:dev {:dependencies [[binaryage/devtools "1.0.0"]
+                                  [figwheel-sidecar "0.5.20"]]
+                   ;; need to add dev source path here to get user.clj loaded
+                   :source-paths ["src" "dev"]
+                   ;; need to add the compiled assets to the :clean-targets
+                   :clean-targets ^{:protect false} ["resources/public/js/compiled"
+                                                     :target-path]}})

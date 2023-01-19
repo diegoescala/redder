@@ -16,7 +16,7 @@
       (let [response-body (get response :body)]
         (rf/dispatch [:set-post-list response-body])))))
 
-(defn fetch-comments! 
+(defn fetch-comments!
   [subreddit post-id]
   (go
     (let [url (str "https://www.reddit.com/r/" subreddit "/comments/" post-id ".json")]
@@ -24,4 +24,3 @@
       (let [response (<! (http/get url {:with-credentials? false}))]
         (let [response-body (get response :body)]
           (rf/dispatch [:set-comments response-body]))))))
-

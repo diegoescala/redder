@@ -1,6 +1,7 @@
 (ns redder.core
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [reagent.core :as reagent]
+            [reagent.dom :as rdom]
             [cljsjs.react]
             [cljs-http.client :as http]
             [cognitect.transit :as transit]
@@ -21,15 +22,17 @@
   [:div
     [ui/choose-subreddit-panel]
     [ui/posts-panel]
-    [ui/comments-view]
-    ])
+    [ui/comments-view]])
+
 
 (defn mount-root
   []
-  (reagent/render [main-page] (.getElementById js/document "app")))
+  (rdom/render [main-page] (.getElementById js/document "app")))
 
 (defn init!
   []
+  (println "halo")
   (events/init-rf)
   (mount-root))
 
+(init!)

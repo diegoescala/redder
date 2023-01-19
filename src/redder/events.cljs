@@ -6,18 +6,18 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn init-rf
     []
-    (do 
-        (rf/reg-event-db 
+    (do
+        (rf/reg-event-db
             :init
             (fn [_ _]
                 (js/console.log "initializing...")
                 {:subreddit-name "NoSub"}))
-            
+
         (rf/reg-event-fx
             :set-post-list
             (fn [{:keys [db]} [_ details]]
                 {:db (assoc db :subreddit-data details)}))
-            
+
         (rf/reg-event-fx
             :set-comments
             (fn [{:keys [db]} [_ details]]
@@ -31,17 +31,16 @@
 
         (rf/reg-event-fx
             :open-post
-            (fn 
+            (fn
                 [{:keys [db]} [_ post-id]]
                 {:db (assoc db :view :post-detail :post-id post-id)}))
 
-        (rf/reg-sub :subreddit-name  (fn [db _] (get db :subreddit-name )))
-        (rf/reg-sub :subreddit-posts (fn [db _] (get db :subreddit-data )))
-        (rf/reg-sub :post-comments   (fn [db _] (get db :comments )))
+        (rf/reg-sub :subreddit-name  (fn [db _] (get db :subreddit-name)))
+        (rf/reg-sub :subreddit-posts (fn [db _] (get db :subreddit-data)))
+        (rf/reg-sub :post-comments   (fn [db _] (get db :comments)))
 
         (rf/dispatch-sync [:init])))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; End re-frame event registration
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-

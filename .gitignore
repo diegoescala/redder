@@ -24,3 +24,5 @@ figwheel_server.log
 *-init.clj
 /.idea
 *.iml
+compiled/
+.rebel*
