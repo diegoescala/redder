@@ -1,6 +1,6 @@
 (ns redder.ui
   (:require [redder.parser :as parser]
-            [redder.ajax :as ajax]
+            [redder.api-client :as api-client]
             [re-frame.core :as rf]
             [reagent.core :as reagent]))
 
@@ -10,7 +10,7 @@
       (let [title (get post-data :title)]
         (let [id (get post-data :id)]
           [:div {:class "post"
-                 :on-click #(ajax/fetch-comments! @(rf/subscribe [:subreddit-name]) id)}
+                 :on-click #(api-client/fetch-comments! @(rf/subscribe [:subreddit-name]) id)}
             title ])))))
         
 (defn posts-panel []
@@ -37,11 +37,12 @@
 (defn choose-subreddit-panel []
   (fn []
     (let [subreddit-name (reagent/atom "NoSub")]
-      [:div {:class "choose"} [:span {:class "subredditprompt"} "Choose a subreddit" ]
+      [:div {:class "choose"} [:span {:class "subredditprompt"} "Choose a subreddit"]
         [:input {:type "text" :on-change #(reset! subreddit-name (-> % .-target .-value))}]
-        [:button {:on-click 
+        [:button 
+         {:on-click 
           #(do
             (rf/dispatch [:open-subreddit @subreddit-name])
-            (ajax/fetch-posts! @subreddit-name)
-            )} "Go!"]])))
+            (api-client/fetch-posts! @subreddit-name))}
+         "Go!"]])))
         

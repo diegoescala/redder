@@ -31,7 +31,6 @@
 
 (defn init!
   []
-  (println "halo")
   (events/init-rf)
   (mount-root))
 

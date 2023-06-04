@@ -1,4 +1,4 @@
-(ns redder.ajax
+(ns redder.api-client
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [reagent.core :as reagent]
             [cljsjs.react]
